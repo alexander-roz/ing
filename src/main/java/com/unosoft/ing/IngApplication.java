@@ -16,8 +16,8 @@ public class IngApplication {
 //			path = args[0];
 //		}
 //		else{
-//			path= "https://github.com/PeacockTeam/new-job/releases/download/v1.0/lng-4.txt.gz";
-			path = "C:\\Users\\test\\Desktop\\lng-4.txt.gz";
+			path= "https://github.com/PeacockTeam/new-job/releases/download/v1.0/lng-4.txt.gz";
+//			path = "C:\\Users\\test\\Desktop\\lng-4.txt.gz";
 //		}
 
 		FileGetter fileGetter = new FileGetter(path);
