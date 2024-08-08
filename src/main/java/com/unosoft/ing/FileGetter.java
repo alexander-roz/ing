@@ -1,18 +1,18 @@
 package com.unosoft.ing;
 
 import lombok.Getter;
-import lombok.SneakyThrows;
 
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.zip.GZIPInputStream;
 
 @Getter
 public class FileGetter {
-    private static final String fileName = "src/main/resources/data/";
+    private static final String fileDir = "src/main/resources/data/";
 
     public FileGetter(String path) throws IOException {
         if(path != null) {
@@ -30,65 +30,84 @@ public class FileGetter {
                 getFileFromPath(path);
             }
         }
-        File file = new File(String.valueOf(findFile(fileName)));
-        if(file.getName().endsWith(".gz")) {
-            decompress(file);
+        File file = new File(String.valueOf(findFile(fileDir)));
+        System.out.println("File name in directory: " + file.getAbsolutePath());
+
+        if(file.getName().endsWith("gz")) {
+            decompress(Objects.requireNonNull(file));
         }
     }
 
     private void getFileFromURL(String path) throws MalformedURLException {
-        URL url = new URL(path);
-
         try {
-            File file = new File(fileName.concat(url.getPath().substring(url.getPath().lastIndexOf("/") + 1)));
-            if (file.createNewFile())
-                System.out.println("File created");
-            else
-                System.out.println("File already exists");
+            URL url = new URL(path);
+            InputStream in = url.openStream();
+            File dir = new File(fileDir);
+            dir.mkdirs();
+            String fileName = getFileName(url);
+            FileOutputStream out = new FileOutputStream(fileDir + File.separator + fileName);
+
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = in.read(buffer)) != -1) {
+                out.write(buffer, 0, bytesRead);
+            }
+
+            out.close();
+            in.close();
+            System.out.println("File downloaded successfully!");
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        catch (Exception e) {
-            System.err.println(e);
-        }
+    }
+    private static String getFileName(URL url) {
+        String[] parts = url.getFile().split("/");
+        return parts[parts.length - 1];
     }
 
     private void getFileFromPath(String path) throws IOException {
         File existingFile = new File(path);
         if(existingFile.exists()) {
-            if(Files.exists(Path.of(fileName.concat(existingFile.getName())))) {
+            if(Files.exists(Path.of(fileDir.concat(existingFile.getName())))) {
                 System.out.println("File already exists");
             }
             else {
-                Files.copy(Path.of(existingFile.getPath()), Path.of(fileName.concat(existingFile.getName())));
+                Files.copy(Path.of(existingFile.getPath()), Path.of(fileDir.concat(existingFile.getName())));
                 System.out.println("File copied");
             }
         }
         else System.out.println("File does not exist");
     }
 
-    static void decompress(File input) {
-        byte[] buffer = new byte[1024];
+    static void decompress(File input) throws IOException {
 
         try {
-            File decompressed = new File("src/main/resources/data/".concat((input.getName()).substring(0,input.getName().length()-3)));
-            Files.createFile(decompressed.toPath());
-            System.out.println("Name of decompressed file: " + decompressed.getAbsolutePath());
+            // Открываем входной файл
+            GZIPInputStream gis = new GZIPInputStream(new BufferedInputStream(new FileInputStream(input)));
 
-            FileInputStream fileIn = new FileInputStream(input);
-            GZIPInputStream gZIPInputStream = new GZIPInputStream(fileIn);
-            FileOutputStream fileOutputStream = new FileOutputStream(decompressed);
-            int bytes_read;
-            while ((bytes_read = gZIPInputStream.read(buffer)) > 0) {
-                fileOutputStream.write(buffer, 0, bytes_read);
+            // Получаем имя выходного файла
+            String outputFileName = String.valueOf(input.getPath()).substring(0, String.valueOf(input.getPath()).length() - 3); // убираем расширение .gz
+
+            // Создаем выходной файл
+            FileOutputStream fos = new FileOutputStream(outputFileName);
+
+            byte[] buffer = new byte[1024];
+            int len;
+            while ((len = gis.read(buffer)) != -1) {
+                fos.write(buffer, 0, len);
             }
-            gZIPInputStream.close();
-            fileOutputStream.close();
-            System.out.println("The file was decompressed successfully!");
-        } catch (IOException ex) {
-            ex.printStackTrace();
+
+            // Закрываем потоки
+            fos.close();
+            gis.close();
+
+            System.out.println("Архив успешно распакован в файл " + outputFileName);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
-    public static File findFile(String directoryPath) {
+        public static File findFile(String directoryPath) {
         File directory = new File(directoryPath);
         if (!directory.exists() || !directory.isDirectory()) {
             System.out.println("Directory not found");
