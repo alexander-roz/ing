@@ -1,4 +1,4 @@
-package com.unosoft.ing;
+package com.unosoft.lng;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -19,6 +19,6 @@ public class IngApplication {
 //			path = "C:\\Users\\test\\Desktop\\lng-4.txt.gz";
 //		}
 
-		FileGetter fileGetter = new FileGetter(path);
+		FileExtractor fileExtractor = new FileExtractor(path);
 	}
 }

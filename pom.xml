@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.unosoft</groupId>
-	<artifactId>ing</artifactId>
+	<artifactId>lng</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>ing</name>
-	<description>ing</description>
+	<name>lng</name>
+	<description>lng</description>
 	<url/>
 	<licenses>
 		<license/>
