@@ -9,9 +9,10 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.zip.GZIPInputStream;
 
-@Getter
 public class FileExtractor {
     private static final String fileDir = "src/main/resources/data/";
+    @Getter
+    private File dataFile;
 
     public FileExtractor(String path) throws IOException {
         if (path != null) {
@@ -31,7 +32,9 @@ public class FileExtractor {
         System.out.println("File name in directory: " + file.getAbsolutePath());
 
         if (file.getName().endsWith("gz")) {
-            decompress(Objects.requireNonNull(file));
+            dataFile = decompress(Objects.requireNonNull(file));
+        } else {
+            dataFile = file;
         }
     }
 
@@ -74,29 +77,29 @@ public class FileExtractor {
         } else System.out.println("File does not exist");
     }
 
-    private static void decompress(File input) {
-        try {
-            // Открываем входной файл
-            GZIPInputStream gis = new GZIPInputStream(new BufferedInputStream(new FileInputStream(input)));
-            // Получаем имя выходного файла
-            String outputFileName = String.valueOf(input.getPath()).substring(0, input.getPath().length() - 3);
-            // Создаем выходной файл
-            FileOutputStream fos = new FileOutputStream(outputFileName);
-            byte[] buffer = new byte[1024];
-            int len;
-            while ((len = gis.read(buffer)) != -1) {
-                fos.write(buffer, 0, len);
-            }
-            // Закрываем потоки
-            fos.close();
-            gis.close();
-            System.out.println("the archive's been successfully unpacked " + outputFileName);
-        } catch (IOException e) {
-            e.printStackTrace();
+    private static File decompress(File input) throws IOException {
+        File file = null;
+        // Открываем входной файл
+        GZIPInputStream gis = new GZIPInputStream(new BufferedInputStream(new FileInputStream(input)));
+        // Получаем имя выходного файла
+        String outputFileName = String.valueOf(input.getPath()).substring(0, input.getPath().length() - 3);
+        // Создаем выходной файл
+        File outputFile = new File(outputFileName);
+        FileOutputStream fos = new FileOutputStream(outputFileName);
+        byte[] buffer = new byte[1024];
+        int len;
+        while ((len = gis.read(buffer)) != -1) {
+            fos.write(buffer, 0, len);
         }
+        // Закрываем потоки
+        fos.close();
+        gis.close();
+        System.out.println("the archive's been successfully unpacked " + outputFileName);
+        file = outputFile;
+        return file;
     }
 
-    private static File findFile(String directoryPath) {
+    public static File findFile(String directoryPath) {
         File directory = new File(directoryPath);
         if (!directory.exists() || !directory.isDirectory()) {
             System.out.println("the directory was not found");
