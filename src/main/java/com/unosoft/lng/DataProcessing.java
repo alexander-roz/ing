@@ -4,27 +4,30 @@ import lombok.Getter;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
 
 public class DataProcessing {
-    @Getter
     private File file;
+    private ArrayList<String> dataArray = new ArrayList<>();
+    private HashMap<Integer, String> groups = new HashMap<>();
 
     public DataProcessing(File file) {
         this.file = file;
     }
 
-    public ArrayList<String> getDataFromFile() throws IOException {
-        FileReader fileReader = new FileReader(file);
-        BufferedReader bufferedReader = new BufferedReader(fileReader);
-        ArrayList<String> dataSet = new ArrayList<>();
-        String line = "";
-        while (line != null) {
-            line = bufferedReader.readLine();
-            dataSet.add(line);
+    public ArrayList<String> getDataFromFile() {
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(file));
+            String line = "";
+            while (line != null) {
+                line = reader.readLine();
+                dataArray.add(line);
+            }
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        return dataSet;
+        return dataArray;
     }
 
 }

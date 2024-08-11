@@ -3,9 +3,11 @@ package com.unosoft.lng;
 import lombok.Getter;
 
 import java.io.*;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Objects;
 import java.util.zip.GZIPInputStream;
 
@@ -21,6 +23,7 @@ public class FileExtractor {
     }
 
     private void extractFile(String path) throws IOException {
+        System.out.println("extractFile() Extracting file: " + path);
         if (path.startsWith("https://") || path.startsWith("http://")) {
             getFileFromURL(path);
         } else {
@@ -38,34 +41,29 @@ public class FileExtractor {
         }
     }
 
-    private void getFileFromURL(String path) {
-        try {
-            URL url = new URL(path);
-            InputStream in = url.openStream();
-            File dir = new File(fileDir);
-            dir.mkdirs();
-            String fileName = getFileName(url);
-            FileOutputStream out = new FileOutputStream(fileDir + File.separator + fileName);
+    private void getFileFromURL(String path) throws MalformedURLException {
+        System.out.println("getFileFromURL() Trying to get file from URL: " + path);
+        URL url = new URL(path);
+        String fileName = getFileName(path);
+        Path outputPath = Path.of(fileDir + fileName);
 
-            byte[] buffer = new byte[4096];
-            int bytesRead;
-            while ((bytesRead = in.read(buffer)) != -1) {
-                out.write(buffer, 0, bytesRead);
-            }
-            out.close();
-            in.close();
-            System.out.println("File downloaded successfully");
+        System.out.println("Reading file: " + fileName);
+        try (InputStream in = url.openStream()) {
+            Files.copy(in, outputPath, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
-    private String getFileName(URL url) {
-        String[] parts = url.getFile().split("/");
+    private String getFileName(String path) {
+        System.out.println("getFileName() Trying to get file name: " + path);
+        String[] parts = path.split("/");
+        System.out.println("file name: " + parts[parts.length - 1]);
         return parts[parts.length - 1];
     }
 
     private void getFileFromPath(String path) throws IOException {
+        System.out.println("getFileFromPath() Trying to get file from path: " + path);
         File existingFile = new File(path);
         if (existingFile.exists()) {
             if (Files.exists(Path.of(fileDir.concat(existingFile.getName())))) {
@@ -78,12 +76,10 @@ public class FileExtractor {
     }
 
     private static File decompress(File input) throws IOException {
+        System.out.println("decompress() Trying to decompress file: " + input);
         File file = null;
-        // Открываем входной файл
         GZIPInputStream gis = new GZIPInputStream(new BufferedInputStream(new FileInputStream(input)));
-        // Получаем имя выходного файла
         String outputFileName = String.valueOf(input.getPath()).substring(0, input.getPath().length() - 3);
-        // Создаем выходной файл
         File outputFile = new File(outputFileName);
         FileOutputStream fos = new FileOutputStream(outputFileName);
         byte[] buffer = new byte[1024];
@@ -91,7 +87,6 @@ public class FileExtractor {
         while ((len = gis.read(buffer)) != -1) {
             fos.write(buffer, 0, len);
         }
-        // Закрываем потоки
         fos.close();
         gis.close();
         System.out.println("the archive's been successfully unpacked " + outputFileName);
@@ -100,6 +95,7 @@ public class FileExtractor {
     }
 
     public static File findFile(String directoryPath) {
+        System.out.println("findFile() Trying to find file in: " + directoryPath);
         File directory = new File(directoryPath);
         if (!directory.exists() || !directory.isDirectory()) {
             System.out.println("the directory was not found");
@@ -112,6 +108,7 @@ public class FileExtractor {
         }
         for (File file : files) {
             if (file.isFile()) {
+                System.out.println("found file: " + file.getAbsolutePath());
                 return file;
             }
         }
