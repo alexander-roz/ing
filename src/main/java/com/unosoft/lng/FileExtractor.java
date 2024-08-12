@@ -12,12 +12,18 @@ import java.util.Objects;
 import java.util.zip.GZIPInputStream;
 
 public class FileExtractor {
-    private static final String fileDir = "src/main/resources/data/";
+//    private static final String fileDir = "src/main/resources/data/";
+    private static final String desktop = System.getProperty("user.home") + File.separator + "Desktop" + File.separator;
+    private static String fileDir;
     @Getter
     private File dataFile;
 
     public FileExtractor(String path) throws IOException {
         if (path != null) {
+            String workDir = desktop + "lng_app_data";
+            new File(workDir).mkdirs();
+            fileDir = workDir;
+            System.out.println("Directory for project files: " + desktop) ;
             extractFile(path);
         } else System.out.println("Invalid path, please check input data");
     }
@@ -45,9 +51,9 @@ public class FileExtractor {
         System.out.println("-> getFileFromURL() Trying to get file from URL: " + path);
         URL url = new URL(path);
         String fileName = getFileName(path);
-        Path outputPath = Path.of(fileDir + fileName);
+        Path outputPath = Path.of(fileDir + File.separator + fileName);
 
-        System.out.println("-> Reading file: " + fileName);
+        System.out.println("-> Operating with file: " + outputPath);
         try (InputStream in = url.openStream()) {
             Files.copy(in, outputPath, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {

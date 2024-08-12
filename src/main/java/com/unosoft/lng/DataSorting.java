@@ -1,6 +1,5 @@
 package com.unosoft.lng;
 
-import ch.qos.logback.core.encoder.JsonEscapeUtil;
 import lombok.Getter;
 
 import java.io.BufferedReader;
@@ -22,11 +21,11 @@ public class DataSorting {
         System.out.println("-> DataSorting operation started");
         this.file = dataFile;
         this.dataArray = getDataFromFile(file);
-        this.groups = sortArray(dataArray);
-        sortedGroupsID = sortTheMap(groups);
+        this.groups = groupToMapByArray(dataArray);
+        this.sortedGroupsID = sortTheMap(groups);
     }
 
-    private HashMap<Integer, Set<String>> sortArray(ArrayList<String> dataArray) {
+    private HashMap<Integer, Set<String>> groupToMapByArray(ArrayList<String> dataArray) {
         System.out.println("-> sortArray() Trying to sort data array");
         int wrongLines = 0;
         // Приведем к виду Map элемента к ID группы
@@ -67,7 +66,7 @@ public class DataSorting {
         }
 
         int count = 0;
-        for(Map.Entry<Integer, Set<String>> entry : groups.entrySet()) {
+        for (Map.Entry<Integer, Set<String>> entry : groups.entrySet()) {
             count = count + entry.getValue().size();
         }
         System.out.println("After sorting " + groups.size() + " groups with " + count + " lines");
@@ -118,7 +117,7 @@ public class DataSorting {
         return dataArray;
     }
 
-    private static List<Integer> sortTheMap(HashMap<Integer, Set<String>> map){
+    private static List<Integer> sortTheMap(HashMap<Integer, Set<String>> map) {
         System.out.println("-> sortTheMap() Trying to sort data HashMap and return sorted List with IDs");
         List<Integer> topValues = map.entrySet().stream()
                 .collect(
@@ -129,7 +128,7 @@ public class DataSorting {
                 )
                 .entrySet()
                 .stream()
-                .sorted( Map.Entry.<Integer,Integer>comparingByValue().reversed())
+                .sorted(Map.Entry.<Integer, Integer>comparingByValue().reversed())
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
         System.out.println("After sortTheMap() method structured: " + topValues.size() + " groups");
