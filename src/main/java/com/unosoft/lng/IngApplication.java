@@ -6,7 +6,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @SpringBootApplication
 public class IngApplication {
@@ -23,22 +24,12 @@ public class IngApplication {
 //		}
 
         FileExtractor fileExtractor = new FileExtractor(path);
-        DataProcessing dataProcessing = new DataProcessing(fileExtractor.getDataFile());
-        ArrayList<String> dataArray = dataProcessing.getDataFromFile();
-        DataSorting dataSorting = new DataSorting(dataArray);
-        int count = 0;
-        int countWrong = 0;
-        for (String line : dataArray) {
-            if (!dataSorting.checkTheLine(line)) {
-                System.out.println("Wrong line: " + line);
-                countWrong++;
-            }
-            count++;
-        }
-        System.out.println("checked lines: " + count + "\nwrong lines: " + countWrong);
+        DataSorting dataSorting = new DataSorting(fileExtractor.getDataFile());
+//        HashMap <Integer, Set<String>> sortedGroups = dataSorting.getGroups();
 
-        Instant finish = Instant.now();
-        long elapsed = Duration.between(start, finish).toSeconds();
-        System.out.println("The program execution is completed after: " + elapsed + " sec");
+        Instant end = Instant.now();
+        Duration duration = Duration.between(start, end);
+        System.out.println("Programming time: " + duration.toSeconds() + " sec");
     }
+
 }

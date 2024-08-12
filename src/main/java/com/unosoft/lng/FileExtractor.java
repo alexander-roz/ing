@@ -23,7 +23,7 @@ public class FileExtractor {
     }
 
     private void extractFile(String path) throws IOException {
-        System.out.println("extractFile() Extracting file: " + path);
+        System.out.println("-> extractFile() Extracting file: " + path);
         if (path.startsWith("https://") || path.startsWith("http://")) {
             getFileFromURL(path);
         } else {
@@ -42,12 +42,12 @@ public class FileExtractor {
     }
 
     private void getFileFromURL(String path) throws MalformedURLException {
-        System.out.println("getFileFromURL() Trying to get file from URL: " + path);
+        System.out.println("-> getFileFromURL() Trying to get file from URL: " + path);
         URL url = new URL(path);
         String fileName = getFileName(path);
         Path outputPath = Path.of(fileDir + fileName);
 
-        System.out.println("Reading file: " + fileName);
+        System.out.println("-> Reading file: " + fileName);
         try (InputStream in = url.openStream()) {
             Files.copy(in, outputPath, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
@@ -56,14 +56,14 @@ public class FileExtractor {
     }
 
     private String getFileName(String path) {
-        System.out.println("getFileName() Trying to get file name: " + path);
+        System.out.println("-> getFileName() Trying to get file name: " + path);
         String[] parts = path.split("/");
         System.out.println("file name: " + parts[parts.length - 1]);
         return parts[parts.length - 1];
     }
 
     private void getFileFromPath(String path) throws IOException {
-        System.out.println("getFileFromPath() Trying to get file from path: " + path);
+        System.out.println("-> getFileFromPath() Trying to get file from path: " + path);
         File existingFile = new File(path);
         if (existingFile.exists()) {
             if (Files.exists(Path.of(fileDir.concat(existingFile.getName())))) {
@@ -76,7 +76,7 @@ public class FileExtractor {
     }
 
     private static File decompress(File input) throws IOException {
-        System.out.println("decompress() Trying to decompress file: " + input);
+        System.out.println("-> decompress() Trying to decompress file: " + input);
         File file = null;
         GZIPInputStream gis = new GZIPInputStream(new BufferedInputStream(new FileInputStream(input)));
         String outputFileName = String.valueOf(input.getPath()).substring(0, input.getPath().length() - 3);
@@ -95,7 +95,7 @@ public class FileExtractor {
     }
 
     public static File findFile(String directoryPath) {
-        System.out.println("findFile() Trying to find file in: " + directoryPath);
+        System.out.println("-> findFile() Trying to find file in: " + directoryPath);
         File directory = new File(directoryPath);
         if (!directory.exists() || !directory.isDirectory()) {
             System.out.println("the directory was not found");
