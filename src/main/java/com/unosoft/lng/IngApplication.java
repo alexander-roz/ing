@@ -28,9 +28,14 @@ public class IngApplication {
         HashMap<Integer, Set<String>> data = dataSorting.getGroups();
         List<Integer> sortedGroupIDs = dataSorting.getSortedGroupsID();
 
+        int counter = 0; //вывод на экран ограничен 20 группами с наибольшим количеством строк
         for (Integer groupID : sortedGroupIDs) {
-            System.out.println("> Group ID: " + groupID + " with " + data.get(groupID).size() + " lines:");
-            data.get(groupID).forEach(System.out::println);
+            if(counter < 20) {
+                System.out.println("> Group ID: " + groupID + " with " + data.get(groupID).size() + " lines:");
+                counter++;
+//            data.get(groupID).forEach(System.out::println);
+            }
+            else break;
         }
 
         Instant end = Instant.now();

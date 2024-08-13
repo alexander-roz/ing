@@ -25,6 +25,7 @@ public class DataSorting {
         this.sortedGroupsID = sortTheMap(groups);
     }
 
+    //метод группировки строк по группам
     private HashMap<Integer, Set<String>> groupToMapByArray(ArrayList<String> dataArray) {
         System.out.println("-> sortArray() Trying to sort data array");
         int wrongLines = 0;
@@ -75,6 +76,7 @@ public class DataSorting {
         return groups;
     }
 
+    //метод проверки строки на соответствие заданным условиям
     public boolean checkTheLine(String line) {
         boolean correct = true;
         String regex = "\"[0-9]*\"";
@@ -117,6 +119,7 @@ public class DataSorting {
         return dataArray;
     }
 
+    //метод сортировки полученных групп по убыванию количества строк, возвращается список с ID групп
     private static List<Integer> sortTheMap(HashMap<Integer, Set<String>> map) {
         System.out.println("-> sortTheMap() Trying to sort data HashMap and return sorted List with IDs");
         List<Integer> topValues = map.entrySet().stream()

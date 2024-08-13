@@ -28,6 +28,7 @@ public class FileExtractor {
         } else System.out.println("Invalid path, please check input data");
     }
 
+    //метод для работы с полученным в качестве аргумента параметром
     private void extractFile(String path) throws IOException {
         System.out.println("-> extractFile() Extracting file: " + path);
         if (path.startsWith("https://") || path.startsWith("http://")) {
@@ -47,6 +48,7 @@ public class FileExtractor {
         }
     }
 
+    //метод получения данных, в случае если входной параметр - ссылка
     private void getFileFromURL(String path) throws MalformedURLException {
         System.out.println("-> getFileFromURL() Trying to get file from URL: " + path);
         URL url = new URL(path);
@@ -61,6 +63,7 @@ public class FileExtractor {
         }
     }
 
+    //метод отделения имени файла от абсолютного пути
     private String getFileName(String path) {
         System.out.println("-> getFileName() Trying to get file name: " + path);
         String[] parts = path.split("/");
@@ -68,6 +71,7 @@ public class FileExtractor {
         return parts[parts.length - 1];
     }
 
+    //метод получения данных, в случае если входной параметр - путь
     private void getFileFromPath(String path) throws IOException {
         System.out.println("-> getFileFromPath() Trying to get file from path: " + path);
         File existingFile = new File(path);
@@ -81,6 +85,7 @@ public class FileExtractor {
         } else System.out.println("File does not exist");
     }
 
+    //метод для распаковки файлов .gz
     private static File decompress(File input) throws IOException {
         System.out.println("-> decompress() Trying to decompress file: " + input);
         File file = null;
@@ -100,6 +105,7 @@ public class FileExtractor {
         return file;
     }
 
+    //метод для поиска файлов в указанной директории
     public static File findFile(String directoryPath) {
         System.out.println("-> findFile() Trying to find file in: " + directoryPath);
         File directory = new File(directoryPath);
