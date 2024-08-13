@@ -27,16 +27,16 @@ public class IngApplication {
         DataSorting dataSorting = new DataSorting(fileExtractor.getDataFile());
         HashMap<Integer, Set<String>> data = dataSorting.getGroups();
         List<Integer> sortedGroupIDs = dataSorting.getSortedGroupsID();
+        fileExtractor.writeToResultFile(dataSorting.getGroups(), sortedGroupIDs);
 
-        int counter = 0; //вывод на экран ограничен 20 группами с наибольшим количеством строк
-        for (Integer groupID : sortedGroupIDs) {
-            if(counter < 20) {
-                System.out.println("> Group ID: " + groupID + " with " + data.get(groupID).size() + " lines:");
-                counter++;
-//            data.get(groupID).forEach(System.out::println);
-            }
-            else break;
-        }
+//        int counter = 0;
+//        for (Integer groupID : sortedGroupIDs) {
+//            if(counter < 20) {
+//                System.out.println("> Group ID: " + groupID + " with " + data.get(groupID).size() + " lines:");
+//                counter++;
+//            }
+//            else break;
+//        }
 
         Instant end = Instant.now();
         Duration duration = Duration.between(start, end);

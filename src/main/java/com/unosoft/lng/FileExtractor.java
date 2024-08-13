@@ -8,7 +8,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.Objects;
+import java.util.*;
 import java.util.zip.GZIPInputStream;
 
 public class FileExtractor {
@@ -126,5 +126,25 @@ public class FileExtractor {
         }
         System.out.println("there are no files in " + directoryPath);
         return null;
+    }
+
+    public void writeToResultFile(HashMap<Integer, Set<String>> groups, List<Integer> sortedIDs){
+        System.out.println("-> writeToResultFile() Trying to write to file");
+        String outputFileName = fileDir + File.separator + "result.txt";
+        File outputFile = new File(outputFileName);
+        try(FileWriter writer = new FileWriter(outputFile, false))
+        {
+            for(Integer id : sortedIDs){
+                writer.write("Группа №" + id + "\n");
+                writer.flush();
+                for(String line : groups.get(id)){
+                    writer.write(line + "\n");
+                    writer.flush();
+                }
+            }
+        }
+        catch(IOException ex){
+            System.out.println(ex.getMessage());
+        }
     }
 }
