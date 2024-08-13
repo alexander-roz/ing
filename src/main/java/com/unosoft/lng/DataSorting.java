@@ -26,38 +26,34 @@ public class DataSorting {
     }
 
     //метод группировки строк по группам
-    private HashMap<Integer, Set<String>> groupToMapByArray(ArrayList<String> dataArray) {
-        System.out.println("-> sortArray() Trying to sort data array");
+    private HashMap<Integer, Set<String>> groupToMapByArray(ArrayList<String> strings) {
         int wrongLines = 0;
-        // Приведем к виду Map элемента к ID группы
         Map<String, Integer> lastGroupId = new HashMap<>();
         int currentGroupId = 0;
-        // Проход по всем строкам
         for (String str : dataArray) {
             if (!checkTheLine(str)) {
                 wrongLines++;
                 continue;
             }
-            // Разделяем строку на части
             String[] parts = str.split(";");
             Set<Integer> groupIds = new HashSet<>();
-            // Смотрим, в каких группах уже есть элементы
+            //смотрим, в каких группах уже есть элементы
             for (String part : parts) {
                 if (lastGroupId.containsKey(part)) {
-                    groupIds.add(lastGroupId.get(part)); // добавляем ID группы
+                    groupIds.add(lastGroupId.get(part)); //добавляем ID группы
                 }
             }
-            // Если есть ID групп, добавляем в них
+            //если есть ID групп, добавляем в них
             if (!groupIds.isEmpty()) {
-                // Берем одну из групп для текущей строки
+                //берем одну из групп для текущей строки
                 int assignedGroupId = groupIds.iterator().next();
                 groups.get(assignedGroupId).add(str); // добавляем строку в уже существующую группу
-                // Обновляем соответствие строк и групп
+                //обновляем соответствие строк и групп
                 for (String part : parts) {
                     lastGroupId.put(part, assignedGroupId);
                 }
             } else {
-                // Создаем новую группу
+                //создаем новую группу
                 groups.put(currentGroupId, new HashSet<>(Collections.singletonList(str)));
                 for (String part : parts) {
                     lastGroupId.put(part, currentGroupId);
