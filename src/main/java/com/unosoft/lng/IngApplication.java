@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @SpringBootApplication
 public class IngApplication {
@@ -25,7 +26,7 @@ public class IngApplication {
 
         FileExtractor fileExtractor = new FileExtractor(path);
         DataSorting dataSorting = new DataSorting(fileExtractor.getDataFile());
-        HashMap<Integer, Set<String>> data = dataSorting.getGroups();
+        ConcurrentHashMap<Integer, Set<String>> data = dataSorting.getGroups();
         List<Integer> sortedGroupIDs = dataSorting.getSortedGroupsID();
         fileExtractor.writeToResultFile(dataSorting.getGroups(), sortedGroupIDs);
 

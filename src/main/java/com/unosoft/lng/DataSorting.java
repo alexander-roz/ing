@@ -9,24 +9,23 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class DataSorting {
-    private File file;
+    private final File file;
     private ArrayList<String> dataArray = new ArrayList<>();
     @Getter
-    private HashMap<Integer, Set<String>> groups = new HashMap<>();
+    private final ConcurrentHashMap<Integer, Set<String>> groups = new ConcurrentHashMap<>();
     @Getter
     private List<Integer> sortedGroupsID;
 
-    public DataSorting(File dataFile) {
+    public DataSorting(File dataFile) throws IOException {
         System.out.println("-> DataSorting operation started");
+
         this.file = dataFile;
-        this.dataArray = getDataFromFile(file);
-        StringGroup stringGroup = new StringGroup(dataArray);
-        this.groups = stringGroup.groups;
-        this.sortedGroupsID = sortTheMap(groups);
+        this.dataArray = getDataFromFile(dataFile);
+        processStrings(dataArray);
+        sortedGroupsID = new ArrayList<>(groups.keySet());
+        Collections.sort(sortedGroupsID);
     }
 
     //метод чтения данных из файла и сохранения в ArrayList для дальнейшей сортировки
@@ -47,137 +46,73 @@ public class DataSorting {
         return dataArray;
     }
 
-    //метод сортировки полученных групп по убыванию количества строк, возвращается список с ID групп
-    private static List<Integer> sortTheMap(HashMap<Integer, Set<String>> map) {
-        System.out.println("-> sortTheMap() Trying to sort data HashMap and return sorted List with IDs");
-        List<Integer> topValues = map.entrySet().stream()
-                .collect(
-                        Collectors.toMap(
-                                Map.Entry::getKey,
-                                entry -> entry.getValue().size()
-                        )
-                )
-                .entrySet()
-                .stream()
-                .sorted(Map.Entry.<Integer, Integer>comparingByValue().reversed())
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
-        System.out.println("After sortTheMap() method structured: " + topValues.size() + " groups");
-        return topValues;
+    private void processStrings(List<String> strings) {
+        int availableThreads = Runtime.getRuntime().availableProcessors();
+        int partitionSize = (int) Math.ceil((double) strings.size() / availableThreads);
+
+        List<Callable<Void>> tasks = new ArrayList<>();
+        for (int i = 0; i < strings.size(); i += partitionSize) {
+            final int start = i;
+            final int end = Math.min(start + partitionSize, strings.size());
+            tasks.add(() -> {
+                processPartition(strings.subList(start, end));
+                return null;
+            });
+        }
+
+        ExecutorService executor = Executors.newFixedThreadPool(availableThreads);
+        try {
+            executor.invokeAll(tasks);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.err.println("Processing was interrupted: " + e.getMessage());
+        } finally {
+            executor.shutdown();
+        }
     }
 
-    static class StringGroup extends RecursiveTask {
-        private final ArrayList<String> strings;
-        private HashMap<Integer, Set<String>> groups = new HashMap<>();
+    private void processPartition(List<String> partition) {
+        Map<String, Integer> localGroups = new HashMap<>();
+        AtomicInteger id = new AtomicInteger(1);
 
-        StringGroup(ArrayList<String> dataArray) {
-            this.strings = dataArray;
-            compute();
+        for (String current : partition) {
+            if (!checkTheLine(current)) {
+                continue;
+            }
+            for (String other : partition) {
+                if (!checkTheLine(other) || current.equals(other)) {
+                    continue;
+                }
+                if (sameGroupString(current, other)) {
+                    localGroups.computeIfAbsent(current, k -> id.getAndIncrement());
+                    localGroups.computeIfAbsent(other, k -> id.getAndIncrement());
+                }
+            }
         }
 
-        @Override
-        protected Object compute() {
-            if (strings.size() < 5000) {
-                System.out.println("-> groupToMapByArray() Trying to collect strings to groups");
-                AtomicInteger id = new AtomicInteger(1);
-                for (int i = 0; i < strings.size(); i++) {
-                    if (!checkTheLine(strings.get(i)) || strings.get(i) == null) continue;
-                    Set<String> group = new TreeSet<>();
-                    if(groups.isEmpty()){
-                        group.add(strings.get(i));
-                        groups.put(id.get(), group);
-                        id.incrementAndGet();
-                    }
-                    for (int j = i + 1; j < strings.size(); j++) {
-                        if (!checkTheLine(strings.get(j)) || strings.get(j) == null) continue;
-                        if (sameGroupString(strings.get(i), strings.get(j))) {
-                            if (groups.containsValue(strings.get(j))) {
-                                for (Map.Entry<Integer, Set<String>> set : groups.entrySet()) {
-                                    if (set.getValue().contains(strings.get(j))) {
-                                        set.getValue().add(strings.get(i));
-                                    }
-                                }
-                            } else {
-                                group.add(strings.get(i));
-                                group.add(strings.get(j));
-                                groups.put(id.get(), group);
-                                id.incrementAndGet();
-                            }
-                        }
-                    }
-                }
-                return groups;
-            } else {
-                ArrayList<StringGroup> tasks = new ArrayList<>();
-                int partitionSize = strings.size()/10;
-
-                Collection<List<String>> partitionedList = IntStream.range(0, strings.size())
-                        .boxed()
-                        .collect(Collectors.groupingBy(partition -> (partition / partitionSize), Collectors.mapping(elementIndex -> strings.get(elementIndex), Collectors.toList())))
-                        .values();
-
-                for (List<String> partOfStringsArray : partitionedList) {
-                    StringGroup task = new StringGroup((ArrayList<String>) partOfStringsArray);
-                    task.fork();
-                    tasks.add(task);
-                }
-                for (StringGroup task : tasks) {
-                    task.join();
-                }
-            }
-            return groups;
+        for (Map.Entry<String, Integer> entry : localGroups.entrySet()) {
+            groups.computeIfAbsent(entry.getValue(), k -> ConcurrentHashMap.newKeySet()).add(entry.getKey());
         }
+    }
 
-        private synchronized boolean sameGroupString(String string1, String string2) {
-            boolean same = false;
-            String[] string1Parts;
-            String[] string2Parts;
+    private boolean checkTheLine(String line) {
+        return line != null && !line.trim().isEmpty();
+    }
 
-            if (!string1.contains(";")) {
-                string1Parts = new String[]{string1};
-            } else {
-                string1Parts = string1.split(";");
-            }
-            if (!string2.contains(";")) {
-                string2Parts = new String[]{string2};
-            } else {
-                string2Parts = string2.split(";");
-            }
+    private boolean sameGroupString(String string1, String string2) {
+        String[] string1Parts = string1.split(";");
+        String[] string2Parts = string2.split(";");
 
-            int linit = Math.min(string1Parts.length, string2Parts.length);
-            for (int i = 0; i < linit; i++) {
-                if (string1Parts[i].equals("\"\"") || string2Parts[i].equals("\"\"")) continue;
-                if (string1Parts[i].equals(string2Parts[i])) {
-                    same = true;
-                    System.out.println("found same parts: " + string2Parts[i] + " & " + string1Parts[i]);
+        for (String part1 : string1Parts) {
+            if ("\"\"".equals(part1)) continue; // Skip empty parts
+            for (String part2 : string2Parts) {
+                if ("\"\"".equals(part2)) continue; // Skip empty parts
+                if (part1.equals(part2)) {
+                    System.out.println("Found same parts: " + part1);
+                    return true;
                 }
             }
-            return same;
         }
-
-        //метод проверки строки на соответствие заданным условиям
-        public synchronized boolean checkTheLine(String line) {
-            boolean correct = true;
-            String regex = "\"[0-9]*\"";
-            if (line == null || !line.startsWith("\"")) {
-                correct = false;
-                return correct;
-            }
-            if (line.contains(";")) {
-                String[] numbers = line.split(";");
-                for (String number : numbers) {
-                    if (!number.matches(regex)) {
-                        correct = false;
-                        break;
-                    }
-                    return correct;
-                }
-            } else {
-                if (!line.matches(regex)) {
-                    correct = false;
-                }
-            }
-            return correct;
-        }
+        return false;
     }
 }

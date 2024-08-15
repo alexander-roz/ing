@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.GZIPInputStream;
 
 public class FileExtractor {
@@ -128,7 +129,7 @@ public class FileExtractor {
         return null;
     }
 
-    public void writeToResultFile(HashMap<Integer, Set<String>> groups, List<Integer> sortedIDs){
+    public void writeToResultFile(ConcurrentHashMap<Integer, Set<String>> groups, List<Integer> sortedIDs){
         System.out.println("-> writeToResultFile() Trying to write to file");
         String outputFileName = fileDir + File.separator + "result.txt";
         File outputFile = new File(outputFileName);
